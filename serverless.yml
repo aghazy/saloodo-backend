@@ -1,0 +1,66 @@
+org: aghazy
+app: saloodo-backend
+service: saloodo-backend
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-west-1
+  memorySize: 2048
+  environment: ${file(env.yml):development}
+  httpApi:
+    cors: true
+    authorizers:
+      custom:
+        type: request
+        functionName: custom
+        identitySource:
+          - $request.header.Authorization
+
+functions:
+  custom:
+    handler: auth/main.handler
+
+  parcel-create:
+    handler: controller/parcel/create.handler
+    events:
+      - httpApi:
+          path: /parcel/{userId}
+          method: post
+          authorizer:
+            name: custom
+            type: request
+
+  parcel-updateState:
+    handler: controller/parcel/updateState.handler
+    events:
+      - httpApi:
+          path: /parcel/{userId}/state/{parcelId}
+          method: put
+          authorizer:
+            name: custom
+            type: request
+
+  parcel-getAll:
+    handler: controller/parcel/getAll.handler
+    events:
+      - httpApi:
+          path: /parcel/{userId}
+          method: get
+          authorizer:
+            name: custom
+            type: request
+
+  users-getUser:
+    handler: controller/user/getUser.handler
+    events:
+      - httpApi:
+          path: /user/{userId}
+          method: get
+          authorizer:
+            name: custom
+            type: request
+
+plugins:
+  - serverless-offline
